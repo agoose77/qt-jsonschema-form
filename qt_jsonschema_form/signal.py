@@ -17,7 +17,7 @@ class BoundSignal:
     def __init__(self):
         self._subscribers = []
 
-    def __call__(self, *args):
+    def emit(self, *args):
         for sub in self._subscribers:
             sub(*args)
 

@@ -1,10 +1,11 @@
-from collections import Sequence
 from functools import partial
-from typing import Tuple, Optional
+from typing import List
+from typing import Tuple, Optional, Dict
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 from .signal import Signal
+from .utils import iter_layout_widgets, state_property, is_concrete_schema
 
 
 class WidgetMixin:
@@ -26,7 +27,7 @@ class WidgetMixin:
     def configure(self):
         pass
 
-    @property
+    @state_property
     def state(self):
         raise NotImplementedError(f"{self.__class__.__name__}.state")
 
@@ -34,7 +35,7 @@ class WidgetMixin:
     def state(self, state):
         raise NotImplementedError(f"{self.__class__.__name__}.state")
 
-    def handle_error(self, path, err):
+    def handle_error(self, path: Tuple[str], err: Exception):
         if path:
             raise ValueError("Cannot handle nested error by default")
         self._set_valid_state(err)
@@ -42,7 +43,7 @@ class WidgetMixin:
     def clear_error(self):
         self._set_valid_state(None)
 
-    def _set_valid_state(self, error=None):
+    def _set_valid_state(self, error: Exception = None):
         palette = self.palette()
         colour = QtGui.QColor()
         colour.setNamedColor(self.VALID_COLOUR if error is None else self.INVALID_COLOUR)
@@ -55,14 +56,14 @@ class WidgetMixin:
 class TextWidget(WidgetMixin, QtWidgets.QLineEdit):
 
     def configure(self):
-        self.textChanged.connect(self.on_changed)
+        self.textChanged.connect(self.on_changed.emit)
 
-    @property
-    def state(self):
+    @state_property
+    def state(self) -> str:
         return str(self.text())
 
     @state.setter
-    def state(self, state):
+    def state(self, state: str):
         self.setText(state)
 
 
@@ -76,58 +77,58 @@ class PasswordWidget(TextWidget):
 
 class TextAreaWidget(WidgetMixin, QtWidgets.QTextEdit):
 
-    @property
-    def state(self):
+    @state_property
+    def state(self) -> str:
         return str(self.toPlainText())
 
     @state.setter
-    def state(self, state):
+    def state(self, state: str):
         self.setPlainText(state)
 
     def configure(self):
-        self.textChanged.connect(lambda: self.on_changed(self.state))
+        self.textChanged.connect(lambda: self.on_changed.emit(self.state))
 
 
 class CheckboxWidget(WidgetMixin, QtWidgets.QCheckBox):
 
-    @property
-    def state(self):
+    @state_property
+    def state(self) -> bool:
         return self.isChecked()
 
     @state.setter
-    def state(self, checked):
+    def state(self, checked: bool):
         self.setChecked(checked)
 
     def configure(self):
-        self.stateChanged.connect(lambda _: self.on_changed(self.state))
+        self.stateChanged.connect(lambda _: self.on_changed.emit(self.state))
 
 
 class SpinDoubleWidget(WidgetMixin, QtWidgets.QDoubleSpinBox):
 
-    @property
-    def state(self):
+    @state_property
+    def state(self) -> float:
         return self.value()
 
     @state.setter
-    def state(self, state):
+    def state(self, state: float):
         self.setValue(state)
 
     def configure(self):
-        self.valueChanged.connect(self.on_changed)
+        self.valueChanged.connect(self.on_changed.emit)
 
 
 class SpinWidget(WidgetMixin, QtWidgets.QSpinBox):
 
-    @property
-    def state(self):
+    @state_property
+    def state(self) -> int:
         return self.value()
 
     @state.setter
-    def state(self, state):
+    def state(self, state: int):
         self.setValue(state)
 
     def configure(self):
-        self.valueChanged.connect(self.on_changed)
+        self.valueChanged.connect(self.on_changed.emit)
 
 
 class IntegerRangeWidget(WidgetMixin, QtWidgets.QSlider):
@@ -135,16 +136,16 @@ class IntegerRangeWidget(WidgetMixin, QtWidgets.QSlider):
     def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'):
         super().__init__(schema, ui_schema, widget_builder, orientation=QtCore.Qt.Horizontal)
 
-    @property
-    def state(self):
+    @state_property
+    def state(self) -> int:
         return self.value()
 
     @state.setter
-    def state(self, state):
+    def state(self, state: int):
         self.setValue(state)
 
     def configure(self):
-        self.valueChanged.connect(self.on_changed)
+        self.valueChanged.connect(self.on_changed.emit)
 
         minimum = 0
         if "minimum" in self.schema:
@@ -164,56 +165,6 @@ class IntegerRangeWidget(WidgetMixin, QtWidgets.QSlider):
             self.setTickPosition(self.TicksBothSides)
 
         self.setRange(minimum, maximum)
-
-
-class ObjectWidget(WidgetMixin, QtWidgets.QGroupBox):
-
-    def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'):
-        super().__init__(schema, ui_schema, widget_builder)
-
-        self.widgets = self.populate_from_schema(schema, ui_schema, widget_builder)
-
-    @property
-    def state(self):
-        return {k: w.state for k, w in self.widgets.items()}
-
-    @state.setter
-    def state(self, state):
-        for name, value in state.items():
-            self.widgets[name].state = value
-
-    def handle_error(self, path: Tuple[str], err: Exception):
-        name, *tail = path
-        self.widgets[name].handle_error(tail, err)
-
-    def widget_on_changed(self, name, value):
-        self.state[name] = value
-        self.on_changed(self.state)
-
-    def populate_from_schema(self, schema, ui_schema, widget_builder):
-        layout = QtWidgets.QFormLayout()
-        self.setLayout(layout)
-        layout.setAlignment(QtCore.Qt.AlignTop)
-        self.setFlat(False)
-
-        if 'title' in schema:
-            self.setTitle(schema['title'])
-
-        if 'description' in schema:
-            self.setToolTip(schema['description'])
-
-        # Populate rows
-        widgets = {}
-
-        for name, sub_schema in schema['properties'].items():
-            sub_ui_schema = ui_schema.get(name, {})
-            widget = widget_builder.create_widget(sub_schema, sub_ui_schema)  # TODO onchanged
-            widget.on_changed.connect(partial(self.widget_on_changed, name))
-            label = sub_schema.get("title", name)
-            layout.addRow(label, widget)
-            widgets[name] = widget
-
-        return widgets
 
 
 class QColorButton(QtWidgets.QPushButton):
@@ -262,9 +213,9 @@ class ColorWidget(WidgetMixin, QColorButton):
     """Widget representation of a string with the 'color' format keyword."""
 
     def configure(self):
-        self.colorChanged.connect(lambda: self.on_changed(self.state))
+        self.colorChanged.connect(lambda: self.on_changed.emit(self.state))
 
-    @property
+    @state_property
     def state(self) -> str:
         return self.color()
 
@@ -287,39 +238,89 @@ class FilepathWidget(WidgetMixin, QtWidgets.QWidget):
         layout.addWidget(self.button_widget)
 
         self.button_widget.clicked.connect(self._on_clicked)
-        self.path_widget.textChanged.connect(self.on_changed)
+        self.path_widget.textChanged.connect(self.on_changed.emit)
 
     def _on_clicked(self, flag):
         path, filter = QtWidgets.QFileDialog.getOpenFileName()
         self.path_widget.setText(path)
 
-    @property
-    def state(self):
+    @state_property
+    def state(self) -> str:
         return self.path_widget.text()
 
     @state.setter
-    def state(self, state):
+    def state(self, state: str):
         self.path_widget.setText(state)
 
 
-def is_concrete_schema(schema):
-    return "type" in schema
+class ArrayControlsWidget(QtWidgets.QWidget):
+    on_delete = QtCore.pyqtSignal()
+    on_move_up = QtCore.pyqtSignal()
+    on_move_down = QtCore.pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+
+        style = self.style()
+
+        self.up_button = QtWidgets.QPushButton()
+        self.up_button.setIcon(style.standardIcon(QtWidgets.QStyle.SP_ArrowUp))
+        self.up_button.clicked.connect(lambda _: self.on_move_up.emit())
+
+        self.delete_button = QtWidgets.QPushButton()
+        self.delete_button.setIcon(style.standardIcon(QtWidgets.QStyle.SP_DialogCancelButton))
+        self.delete_button.clicked.connect(lambda _: self.on_delete.emit())
+
+        self.down_button = QtWidgets.QPushButton()
+        self.down_button.setIcon(style.standardIcon(QtWidgets.QStyle.SP_ArrowDown))
+        self.down_button.clicked.connect(lambda _: self.on_move_down.emit())
+
+        group_layout = QtWidgets.QHBoxLayout()
+        self.setLayout(group_layout)
+        group_layout.addWidget(self.up_button)
+        group_layout.addWidget(self.down_button)
+        group_layout.addWidget(self.delete_button)
+        group_layout.setSpacing(0)
+        group_layout.addStretch(0)
+
+
+class ArrayRowWidget(QtWidgets.QWidget):
+
+    def __init__(self, widget: QtWidgets.QWidget, controls: ArrayControlsWidget):
+        super().__init__()
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(widget)
+        layout.addWidget(controls)
+        self.setLayout(layout)
+
+        self.widget = widget
+        self.controls = controls
 
 
 class ArrayWidget(WidgetMixin, QtWidgets.QWidget):
 
     @property
-    def state(self):
-        return [w.state for (w, c) in self.rows]
+    def rows(self) -> List[ArrayRowWidget]:
+        return [*iter_layout_widgets(self.array_layout)]
+
+    @state_property
+    def state(self) -> list:
+        return [r.widget.state for r in self.rows]
 
     @state.setter
-    def state(self, state):
-        raise NotImplementedError
+    def state(self, state: list):
+        for row in self.rows:
+            self._remove_item(row)
+
+        for item in state:
+            self._add_item(item)
+
+        self.on_changed.emit(self.state)
 
     def handle_error(self, path: Tuple[str], err: Exception):
         index, *tail = path
-        widget, controls = self.rows[index]
-        widget.handle_error(tail, err)
+        self.rows[index].widget.handle_error(tail, err)
 
     def configure(self):
         layout = QtWidgets.QVBoxLayout()
@@ -327,22 +328,43 @@ class ArrayWidget(WidgetMixin, QtWidgets.QWidget):
 
         self.add_button = QtWidgets.QPushButton()
         self.add_button.setIcon(style.standardIcon(QtWidgets.QStyle.SP_FileIcon))
-        self.add_button.clicked.connect(self.add_item)
+        self.add_button.clicked.connect(lambda _: self.add_item())
 
-        self.array_widget = QtWidgets.QWidget(self)
-        array_layout = QtWidgets.QGridLayout()
-        self.array_widget.setLayout(array_layout)
-        self.on_changed.connect(self._update_add_state)
+        self.array_layout = QtWidgets.QVBoxLayout()
+        array_widget = QtWidgets.QWidget(self)
+        array_widget.setLayout(self.array_layout)
+
+        self.on_changed.connect(self._on_updated)
 
         layout.addWidget(self.add_button)
-        layout.addWidget(self.array_widget)
+        layout.addWidget(array_widget)
         self.setLayout(layout)
 
-        self.rows = []
-
-    def _update_add_state(self, _):
+    def _on_updated(self, state):
+        # Update add button
         disabled = self.next_item_schema is None
         self.add_button.setEnabled(not disabled)
+
+        previous_row = None
+        for i, row in enumerate(self.rows):
+            if previous_row:
+                can_exchange_previous = previous_row.widget.schema == row.widget.schema
+                row.controls.up_button.setEnabled(can_exchange_previous)
+                previous_row.controls.down_button.setEnabled(can_exchange_previous)
+            else:
+                row.controls.up_button.setEnabled(False)
+            row.controls.delete_button.setEnabled(not self.is_fixed_schema(i))
+            previous_row = row
+
+        if previous_row:
+            previous_row.controls.down_button.setEnabled(False)
+
+    def is_fixed_schema(self, index: int) -> bool:
+        schema = self.schema['items']
+        if isinstance(schema, dict):
+            return False
+
+        return index < len(schema)
 
     @property
     def next_item_schema(self) -> Optional[dict]:
@@ -365,69 +387,100 @@ class ArrayWidget(WidgetMixin, QtWidgets.QWidget):
 
         return item_schema
 
-    def add_item(self, _):
-        item_schema = self.schema['items']
-        index = len(self.rows)
-        print(f"Add after {index} rows")
+    def add_item(self, item_state=None):
+        self._add_item(item_state)
+        self.on_changed.emit(self.state)
 
-        if isinstance(item_schema, Sequence):
-            try:
-                item_schema = item_schema[index]
-            except IndexError:
-                item_schema = self.schema.get("additionalItems", {})
-                if item_schema is False:
-                    raise ValueError("No additional fields permitted")
-                elif item_schema is True or not is_concrete_schema(item_schema):
-                    raise ValueError("Require concrete schema")
+    def remove_item(self, row: ArrayRowWidget):
+        self._remove_item(row)
+        self.on_changed.emit(self.state)
 
+    def move_item_up(self, row: ArrayRowWidget):
+        index = self.rows.index(row)
+        self.array_layout.insertWidget(max(0, index - 1), row)
+        self.on_changed.emit(self.state)
+
+    def move_item_down(self, row: ArrayRowWidget):
+        index = self.rows.index(row)
+        self.array_layout.insertWidget(min(len(self.rows) - 1, index + 1), row)
+        self.on_changed.emit(self.state)
+
+    def _add_item(self, item_state=None):
+        item_schema = self.next_item_schema
+
+        # Create widget
         item_ui_schema = self.ui_schema.get("items", {})
-        widget = self.widget_builder.create_widget(item_schema, item_ui_schema)
-        widget.on_changed.connect(partial(self.widget_on_changed, index))
-        controls = self.create_controls(lambda: self.remove_item(row))
+        print(item_schema, item_state)
+        widget = self.widget_builder.create_widget(item_schema, item_ui_schema, item_state)
+        controls = ArrayControlsWidget()
 
-        row = widget, controls
-        self.rows.append(row)
+        # Create row
+        row = ArrayRowWidget(widget, controls)
+        self.array_layout.addWidget(row)
 
-        row_index = len(self.rows)
-        layout = self.array_widget.layout()
-        layout.addWidget(widget, row_index, 0)
-        layout.addWidget(controls, row_index, 1)
+        # Setup callbacks
+        widget.on_changed.connect(partial(self.widget_on_changed, row))
+        controls.on_delete.connect(partial(self.remove_item, row))
+        controls.on_move_up.connect(partial(self.move_item_up, row))
+        controls.on_move_down.connect(partial(self.move_item_down, row))
 
-        self.on_changed(self.state)
+        return row
 
-    @staticmethod
-    def create_controls(delete_cb) -> QtWidgets.QWidget:
-        item_controls_widget = QtWidgets.QWidget()
-        style = item_controls_widget.style()
+    def _remove_item(self, row: ArrayRowWidget):
+        self.array_layout.removeWidget(row)
+        row.deleteLater()
 
-        up_button = QtWidgets.QPushButton()
-        up_button.setIcon(style.standardIcon(QtWidgets.QStyle.SP_ArrowUp))
+    def widget_on_changed(self, row: ArrayRowWidget, value):
+        self.state[self.rows.index(row)] = value
+        self.on_changed.emit(self.state)
 
-        delete_button = QtWidgets.QPushButton()
-        delete_button.setIcon(style.standardIcon(QtWidgets.QStyle.SP_DialogCancelButton))
-        delete_button.clicked.connect(lambda _: delete_cb())
 
-        down_button = QtWidgets.QPushButton()
-        down_button.setIcon(style.standardIcon(QtWidgets.QStyle.SP_ArrowDown))
+class ObjectWidget(WidgetMixin, QtWidgets.QGroupBox):
 
-        group_layout = QtWidgets.QHBoxLayout()
-        item_controls_widget.setLayout(group_layout)
-        group_layout.addWidget(up_button)
-        group_layout.addWidget(down_button)
-        group_layout.addWidget(delete_button)
-        group_layout.setSpacing(0)
-        group_layout.addStretch(0)
-        return item_controls_widget
+    def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'):
+        super().__init__(schema, ui_schema, widget_builder)
 
-    def remove_item(self, row: tuple):
-        widget, controls = row
-        self.rows.remove(row)
+        self.widgets = self.populate_from_schema(schema, ui_schema, widget_builder)
 
-        widget.deleteLater()
-        controls.deleteLater()
+    @state_property
+    def state(self) -> dict:
+        return {k: w.state for k, w in self.widgets.items()}
 
-        self.on_changed(self.state)
+    @state.setter
+    def state(self, state: dict):
+        for name, value in state.items():
+            self.widgets[name].state = value
 
-    def widget_on_changed(self, index: int, value):
-        self.state[index] = value
-        self.on_changed(self.state)
+    def handle_error(self, path: Tuple[str], err: Exception):
+        name, *tail = path
+        self.widgets[name].handle_error(tail, err)
+
+    def widget_on_changed(self, name: str, value):
+        self.state[name] = value
+        self.on_changed.emit(self.state)
+
+    def populate_from_schema(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'
+                             ) -> Dict[str, QtWidgets.QWidget]:
+        layout = QtWidgets.QFormLayout()
+        self.setLayout(layout)
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        self.setFlat(False)
+
+        if 'title' in schema:
+            self.setTitle(schema['title'])
+
+        if 'description' in schema:
+            self.setToolTip(schema['description'])
+
+        # Populate rows
+        widgets = {}
+
+        for name, sub_schema in schema['properties'].items():
+            sub_ui_schema = ui_schema.get(name, {})
+            widget = widget_builder.create_widget(sub_schema, sub_ui_schema)  # TODO onchanged
+            widget.on_changed.connect(partial(self.widget_on_changed, name))
+            label = sub_schema.get("title", name)
+            layout.addRow(label, widget)
+            widgets[name] = widget
+
+        return widgets

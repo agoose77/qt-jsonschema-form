@@ -6,16 +6,19 @@ from jsonschema.validators import validator_for
 
 
 # TODO
-def compute_defaults(schema) -> Optional[dict]:
+def compute_defaults(schema):
     if "default" in schema:
         return schema["default"]
 
     schema_type = schema["type"]
 
     if schema_type == "object":
-        return {k: compute_defaults(v) for k, v in schema["properties"].items()}
+        return {k: compute_defaults(s) for k, s in schema["properties"].items()}
     elif schema_type == "array":
-        return None
+        items_schema = schema['items']
+        if isinstance(items_schema, dict):
+            return []
+        return [compute_defaults(s) for s in schema["items"]]
 
     return None
 
@@ -86,10 +89,9 @@ class WidgetBuilder:
         widget_variant = ui_schema.get('ui:widget', default_variant)
         widget_cls = self.widget_map[schema_type][widget_variant]
 
-        widget = widget_cls(schema, ui_schema, self)  # TODO set state
-        # TODO
-        # default_state = get_widget_state(schema, state)
-        # if default_state is not None:
-        #     print("sET", default_state)
-        #     widget.state = default_state
+        widget = widget_cls(schema, ui_schema, self)
+
+        default_state = get_widget_state(schema, state)
+        if default_state is not None:
+            widget.state = default_state
         return widget

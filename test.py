@@ -29,14 +29,19 @@ if __name__ == "__main__":
             },
             "names": {
                 "type": "array",
-                "items": [{
-                    "type": "string",
-                    "pattern": "[a-zA-Z\-'\s]+"
-                },
+                "items": [
                     {
                         "type": "string",
                         "pattern": "[a-zA-Z\-'\s]+"
-                    }]
+                    },
+                    {
+                        "type": "string",
+                        "pattern": "[a-zA-Z\-'\s]+"
+                    }
+                ],
+                "additionalItems": {
+                    "type": "number"
+                }
             }
         }
     }
@@ -51,6 +56,15 @@ if __name__ == "__main__":
 
     }
     w = wb.create_form(s, uis)
+    w.state = {
+        "schema_path": "/home/angus/PycharmProjects/qt-jsonschema-form/qt_jsonschema_form/__pycache__/__init__.cpython-37.pyc",
+        "integerRangeSteps": 60,
+        "sky_colour": "#8f5902",
+        # "names": [
+        #     "wer",
+        #     ""
+        # ]
+    }
     w.show()
     w.on_changed.connect(lambda d: print(dumps(d, indent=4)))
 
