@@ -18,14 +18,14 @@ def get_schema_type(schema: dict) -> str:
 
 class WidgetBuilder:
     default_widget_map = {
-        "boolean": {"checkbox": widgets.CheckboxWidget, "enum": widgets.EnumWidget},
-        "object": {"object": widgets.ObjectWidget, "enum": widgets.EnumWidget},
-        "number": {"spin": widgets.SpinDoubleWidget, "text": widgets.TextWidget, "enum": widgets.EnumWidget},
-        "string": {"textarea": widgets.TextAreaWidget, "text": widgets.TextWidget, "password": widgets.PasswordWidget,
-                   "filepath": widgets.FilepathWidget, "colour": widgets.ColorWidget, "enum": widgets.EnumWidget},
-        "integer": {"spin": widgets.SpinWidget, "text": widgets.TextWidget, "range": widgets.IntegerRangeWidget,
-                    "enum": widgets.EnumWidget},
-        "array": {"array": widgets.ArrayWidget, "enum": widgets.EnumWidget}
+        "boolean": {"checkbox": widgets.CheckboxSchemaWidget, "enum": widgets.EnumSchemaWidget},
+        "object": {"object": widgets.ObjectSchemaWidget, "enum": widgets.EnumSchemaWidget},
+        "number": {"spin": widgets.SpinDoubleSchemaWidget, "text": widgets.TextSchemaWidget, "enum": widgets.EnumSchemaWidget},
+        "string": {"textarea": widgets.TextAreaSchemaWidget, "text": widgets.TextSchemaWidget, "password": widgets.PasswordWidget,
+                   "filepath": widgets.FilepathSchemaWidget, "colour": widgets.ColorSchemaWidget, "enum": widgets.EnumSchemaWidget},
+        "integer": {"spin": widgets.SpinSchemaWidget, "text": widgets.TextSchemaWidget, "range": widgets.IntegerRangeSchemaWidget,
+                    "enum": widgets.EnumSchemaWidget},
+        "array": {"array": widgets.ArraySchemaWidget, "enum": widgets.EnumSchemaWidget}
     }
 
     default_widget_variants = {
@@ -45,24 +45,31 @@ class WidgetBuilder:
         self.widget_map = deepcopy(self.default_widget_map)
         self.validator_cls = validator_cls
 
-    def create_form(self, schema: dict, ui_schema: dict, state=None) -> widgets.WidgetMixin:
+    def create_form(self, schema: dict, ui_schema: dict, state=None) -> widgets.SchemaWidgetMixin:
         validator_cls = self.validator_cls
         if validator_cls is None:
             validator_cls = validator_for(schema)
 
         validator_cls.check_schema(schema)
         validator = validator_cls(schema)
-        widget = self.create_widget(schema, ui_schema, state)
+        schema_widget = self.create_widget(schema, ui_schema, state)
+        form = widgets.FormWidget(schema_widget)
 
         def validate(data):
-            for err in validator.iter_errors(data):
-                widget.handle_error(err.path, err)
+            form.clear_errors()
+            errors = [*validator.iter_errors(data)]
 
-        widget.on_changed.connect(validate)
+            if errors:
+                form.display_errors(errors)
 
-        return widget
+            for err in errors:
+                schema_widget.handle_error(err.path, err)
 
-    def create_widget(self, schema: dict, ui_schema: dict, state=None) -> widgets.WidgetMixin:
+        schema_widget.on_changed.connect(validate)
+
+        return form
+
+    def create_widget(self, schema: dict, ui_schema: dict, state=None) -> widgets.SchemaWidgetMixin:
         schema_type = get_schema_type(schema)
 
         try:

@@ -8,7 +8,7 @@ from .signal import Signal
 from .utils import iter_layout_widgets, state_property, is_concrete_schema
 
 
-class WidgetMixin:
+class SchemaWidgetMixin:
     on_changed = Signal()
 
     VALID_COLOUR = '#ffffff'
@@ -53,7 +53,7 @@ class WidgetMixin:
         self.setToolTip("" if error is None else error.message)  # TODO
 
 
-class TextWidget(WidgetMixin, QtWidgets.QLineEdit):
+class TextSchemaWidget(SchemaWidgetMixin, QtWidgets.QLineEdit):
 
     def configure(self):
         self.textChanged.connect(self.on_changed.emit)
@@ -67,7 +67,7 @@ class TextWidget(WidgetMixin, QtWidgets.QLineEdit):
         self.setText(state)
 
 
-class PasswordWidget(TextWidget):
+class PasswordWidget(TextSchemaWidget):
 
     def configure(self):
         super().configure()
@@ -75,7 +75,7 @@ class PasswordWidget(TextWidget):
         self.setEchoMode(self.Password)
 
 
-class TextAreaWidget(WidgetMixin, QtWidgets.QTextEdit):
+class TextAreaSchemaWidget(SchemaWidgetMixin, QtWidgets.QTextEdit):
 
     @state_property
     def state(self) -> str:
@@ -89,7 +89,7 @@ class TextAreaWidget(WidgetMixin, QtWidgets.QTextEdit):
         self.textChanged.connect(lambda: self.on_changed.emit(self.state))
 
 
-class CheckboxWidget(WidgetMixin, QtWidgets.QCheckBox):
+class CheckboxSchemaWidget(SchemaWidgetMixin, QtWidgets.QCheckBox):
 
     @state_property
     def state(self) -> bool:
@@ -103,7 +103,7 @@ class CheckboxWidget(WidgetMixin, QtWidgets.QCheckBox):
         self.stateChanged.connect(lambda _: self.on_changed.emit(self.state))
 
 
-class SpinDoubleWidget(WidgetMixin, QtWidgets.QDoubleSpinBox):
+class SpinDoubleSchemaWidget(SchemaWidgetMixin, QtWidgets.QDoubleSpinBox):
 
     @state_property
     def state(self) -> float:
@@ -117,7 +117,7 @@ class SpinDoubleWidget(WidgetMixin, QtWidgets.QDoubleSpinBox):
         self.valueChanged.connect(self.on_changed.emit)
 
 
-class SpinWidget(WidgetMixin, QtWidgets.QSpinBox):
+class SpinSchemaWidget(SchemaWidgetMixin, QtWidgets.QSpinBox):
 
     @state_property
     def state(self) -> int:
@@ -131,7 +131,7 @@ class SpinWidget(WidgetMixin, QtWidgets.QSpinBox):
         self.valueChanged.connect(self.on_changed.emit)
 
 
-class IntegerRangeWidget(WidgetMixin, QtWidgets.QSlider):
+class IntegerRangeSchemaWidget(SchemaWidgetMixin, QtWidgets.QSlider):
 
     def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'):
         super().__init__(schema, ui_schema, widget_builder, orientation=QtCore.Qt.Horizontal)
@@ -209,7 +209,7 @@ class QColorButton(QtWidgets.QPushButton):
         return super(QColorButton, self).mousePressEvent(event)
 
 
-class ColorWidget(WidgetMixin, QColorButton):
+class ColorSchemaWidget(SchemaWidgetMixin, QColorButton):
     """Widget representation of a string with the 'color' format keyword."""
 
     def configure(self):
@@ -224,7 +224,7 @@ class ColorWidget(WidgetMixin, QColorButton):
         self.setColor(data)
 
 
-class FilepathWidget(WidgetMixin, QtWidgets.QWidget):
+class FilepathSchemaWidget(SchemaWidgetMixin, QtWidgets.QWidget):
 
     def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'):
         super().__init__(schema, ui_schema, widget_builder)
@@ -298,7 +298,7 @@ class ArrayRowWidget(QtWidgets.QWidget):
         self.controls = controls
 
 
-class ArrayWidget(WidgetMixin, QtWidgets.QWidget):
+class ArraySchemaWidget(SchemaWidgetMixin, QtWidgets.QWidget):
 
     @property
     def rows(self) -> List[ArrayRowWidget]:
@@ -434,7 +434,7 @@ class ArrayWidget(WidgetMixin, QtWidgets.QWidget):
         self.on_changed.emit(self.state)
 
 
-class ObjectWidget(WidgetMixin, QtWidgets.QGroupBox):
+class ObjectSchemaWidget(SchemaWidgetMixin, QtWidgets.QGroupBox):
 
     def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'):
         super().__init__(schema, ui_schema, widget_builder)
@@ -485,7 +485,7 @@ class ObjectWidget(WidgetMixin, QtWidgets.QGroupBox):
         return widgets
 
 
-class EnumWidget(WidgetMixin, QtWidgets.QComboBox):
+class EnumSchemaWidget(SchemaWidgetMixin, QtWidgets.QComboBox):
 
     @state_property
     def state(self):
@@ -507,5 +507,40 @@ class EnumWidget(WidgetMixin, QtWidgets.QComboBox):
         self.currentIndexChanged.connect(lambda _: self.on_changed.emit(self.state))
 
     def _index_changed(self, index: int):
-        value = self.itemData(index)
         self.on_changed.emit(self.state)
+
+
+class FormWidget(QtWidgets.QWidget):
+
+    def __init__(self, widget):
+        super().__init__()
+        layout = QtWidgets.QVBoxLayout()
+        self.setLayout(layout)
+
+        self.error_widget = QtWidgets.QGroupBox()
+        self.error_widget.setTitle("Errors")
+        self.error_layout = QtWidgets.QVBoxLayout()
+        self.error_widget.setLayout(self.error_layout)
+        self.error_widget.hide()
+
+        layout.addWidget(self.error_widget)
+        layout.addWidget(widget)
+
+        self.widget = widget
+
+    def display_errors(self, errors: List[Exception]):
+        self.error_widget.show()
+
+        layout = self.error_widget.layout()
+        while True:
+            item = layout.takeAt(0)
+            if not item:
+                break
+            item.widget().deleteLater()
+
+        for err in errors:
+            widget = QtWidgets.QLabel(f"<b>.{'.'.join(err.path)}</b> {err.message}")
+            layout.addWidget(widget)
+
+    def clear_errors(self):
+        self.error_widget.hide()

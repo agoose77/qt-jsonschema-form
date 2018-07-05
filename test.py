@@ -61,8 +61,8 @@ if __name__ == "__main__":
         }
 
     }
-    w = wb.create_form(s, uis)
-    w.state = {
+    form = wb.create_form(s, uis)
+    form.state = {
         "schema_path": "/home/angus/PycharmProjects/qt-jsonschema-form/qt_jsonschema_form/__pycache__/__init__.cpython-37.pyc",
         "integerRangeSteps": 60,
         "sky_colour": "#8f5902",
@@ -71,9 +71,9 @@ if __name__ == "__main__":
             "Bob"
         ]
     }
-    w.show()
-    w.on_changed.connect(lambda d: print(dumps(d, indent=4)))
+    form.show()
+    form.widget.on_changed.connect(lambda d: print(dumps(d, indent=4)))
 
-    print(w)
+    print(form)
     app.exec_()
 
