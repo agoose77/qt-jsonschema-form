@@ -1,26 +1,9 @@
 from copy import deepcopy
-from typing import Optional
 
-from . import widgets
 from jsonschema.validators import validator_for
-
-
-# TODO
-def compute_defaults(schema):
-    if "default" in schema:
-        return schema["default"]
-
-    schema_type = schema["type"]
-
-    if schema_type == "object":
-        return {k: compute_defaults(s) for k, s in schema["properties"].items()}
-    elif schema_type == "array":
-        items_schema = schema['items']
-        if isinstance(items_schema, dict):
-            return []
-        return [compute_defaults(s) for s in schema["items"]]
-
-    return None
+\
+from . import widgets
+from .defaults import compute_defaults
 
 
 def get_widget_state(schema, state=None):
@@ -35,13 +18,14 @@ def get_schema_type(schema: dict) -> str:
 
 class WidgetBuilder:
     default_widget_map = {
-        "boolean": {"checkbox": widgets.CheckboxWidget},
-        "object": {"object": widgets.ObjectWidget},
-        "number": {"spin": widgets.SpinDoubleWidget, "text": widgets.TextWidget},
+        "boolean": {"checkbox": widgets.CheckboxWidget, "enum": widgets.EnumWidget},
+        "object": {"object": widgets.ObjectWidget, "enum": widgets.EnumWidget},
+        "number": {"spin": widgets.SpinDoubleWidget, "text": widgets.TextWidget, "enum": widgets.EnumWidget},
         "string": {"textarea": widgets.TextAreaWidget, "text": widgets.TextWidget, "password": widgets.PasswordWidget,
-                   "filepath": widgets.FilepathWidget, "colour": widgets.ColorWidget},
-        "integer": {"spin": widgets.SpinWidget, "text": widgets.TextWidget, "range": widgets.IntegerRangeWidget},
-        "array": {"array": widgets.ArrayWidget}
+                   "filepath": widgets.FilepathWidget, "colour": widgets.ColorWidget, "enum": widgets.EnumWidget},
+        "integer": {"spin": widgets.SpinWidget, "text": widgets.TextWidget, "range": widgets.IntegerRangeWidget,
+                    "enum": widgets.EnumWidget},
+        "array": {"array": widgets.ArrayWidget, "enum": widgets.EnumWidget}
     }
 
     default_widget_variants = {
@@ -85,6 +69,9 @@ class WidgetBuilder:
             default_variant = self.widget_variant_modifiers[schema_type](schema)
         except KeyError:
             default_variant = self.default_widget_variants[schema_type]
+
+        if "enum" in schema:
+            default_variant = "enum"
 
         widget_variant = ui_schema.get('ui:widget', default_variant)
         widget_cls = self.widget_map[schema_type][widget_variant]

@@ -410,7 +410,6 @@ class ArrayWidget(WidgetMixin, QtWidgets.QWidget):
 
         # Create widget
         item_ui_schema = self.ui_schema.get("items", {})
-        print(item_schema, item_state)
         widget = self.widget_builder.create_widget(item_schema, item_ui_schema, item_state)
         controls = ArrayControlsWidget()
 
@@ -484,3 +483,29 @@ class ObjectWidget(WidgetMixin, QtWidgets.QGroupBox):
             widgets[name] = widget
 
         return widgets
+
+
+class EnumWidget(WidgetMixin, QtWidgets.QComboBox):
+
+    @state_property
+    def state(self):
+        return self.itemData(self.currentIndex())
+
+    @state.setter
+    def state(self, value):
+        index = self.findData(value)
+        if index == -1:
+            raise ValueError(value)
+        self.setCurrentIndex(index)
+
+    def configure(self):
+        options = self.schema["enum"]
+        for i, opt in enumerate(options):
+            self.addItem(str(opt))
+            self.setItemData(i, opt)
+
+        self.currentIndexChanged.connect(lambda _: self.on_changed.emit(self.state))
+
+    def _index_changed(self, index: int):
+        value = self.itemData(index)
+        self.on_changed.emit(self.state)
