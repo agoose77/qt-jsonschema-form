@@ -8,8 +8,9 @@ from qt_jsonschema_form import WidgetBuilder
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    wb = WidgetBuilder()
-    s = {
+    builder = WidgetBuilder()
+
+    schema = {
         "type": "object",
         "title": "Number fields and widgets",
         "properties": {
@@ -52,7 +53,7 @@ if __name__ == "__main__":
         }
     }
 
-    uis = {
+    ui_schema = {
         "schema_path": {
             "ui:widget": "filepath"
         },
@@ -61,9 +62,9 @@ if __name__ == "__main__":
         }
 
     }
-    form = wb.create_form(s, uis)
-    form.state = {
-        "schema_path": "/home/angus/PycharmProjects/qt-jsonschema-form/qt_jsonschema_form/__pycache__/__init__.cpython-37.pyc",
+    form = builder.create_form(schema, ui_schema)
+    form.widget.state = {
+        "schema_path": "some_file.py",
         "integerRangeSteps": 60,
         "sky_colour": "#8f5902",
         "names": [
@@ -74,6 +75,5 @@ if __name__ == "__main__":
     form.show()
     form.widget.on_changed.connect(lambda d: print(dumps(d, indent=4)))
 
-    print(form)
     app.exec_()
 
