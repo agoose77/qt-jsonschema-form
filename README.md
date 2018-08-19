@@ -9,6 +9,8 @@ A tool to generate Qt forms from JSON Schemas.
 ## Unsupported validators
 Currently this tool does not support `anyOf` or `oneOf` directives. The reason for this is simply that these validators have different semantics depending upon the context in which they are found. Primitive support could be added with meta-widgets for type schemas.
 
+Additionally, the `$ref` keyword is not supported. This will be fixed, but is waiting on some proposed upstream changes in `jsonschema`
+
 ## Example
 ```python3
 import sys
