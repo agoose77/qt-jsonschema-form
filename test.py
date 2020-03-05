@@ -32,6 +32,10 @@ if __name__ == "__main__":
             "sky_colour": {
                 "type": "string"
             },
+            "boolean": {
+                "type": "boolean",
+
+            },
             "enum": {
                 "type": "boolean",
                 "enum": [True, False]
