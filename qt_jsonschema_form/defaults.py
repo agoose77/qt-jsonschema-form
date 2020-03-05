@@ -1,5 +1,6 @@
 from .numeric_defaults import numeric_defaults
 
+
 def enum_defaults(schema):
     try:
         return schema["enum"][0]
@@ -11,14 +12,19 @@ def object_defaults(schema):
     return {k: compute_defaults(s) for k, s in schema["properties"].items()}
 
 
-def array_defaults(schema):
-    items_schema = schema['items']
-    if isinstance(items_schema, dict):
-        # in this case, it should be a list of items_schema
-        return []
+def list_defaults(schema):
+    return []
 
-    # in this case, it's a tuple.
+
+def tuple_defaults(schema):
     return [compute_defaults(s) for s in schema["items"]]
+
+
+def array_defaults(schema):
+    if isinstance(schema['items'], dict):
+        return list_defaults(schema)
+    else:
+        return tuple_defaults(schema)
 
 
 defaults = {
