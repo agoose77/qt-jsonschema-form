@@ -49,11 +49,16 @@ def array_defaults(schema):
         return tuple_defaults(schema)
 
 
+def boolean_defaults(schema):
+    return True
+
+
 defaults = {
     "array": array_defaults,
     "object": object_defaults,
     "numeric": numeric_defaults,
     "integer": numeric_defaults,
+    "boolean": boolean_defaults,
 }
 
 
