@@ -45,9 +45,12 @@ def compute_defaults(schema):
         # any value is valid.
         return {}
 
-    schema_type = schema["type"]
+    schema_types = schema["type"]
+    if not isinstance(schema_types, list):
+        schema_types = [schema_types]
 
-    if schema_type in defaults:
-        return defaults[schema_type](schema)
+    for schema_type in schema_types:
+        if schema_type in defaults:
+            return defaults[schema_type](schema)
 
     return None
