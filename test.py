@@ -32,6 +32,11 @@ if __name__ == "__main__":
             "sky_colour": {
                 "type": "string"
             },
+            "enum": {
+                "type": "boolean",
+                "enum": [True, False]
+
+            },
             "names": {
                 "type": "array",
                 "items": [
@@ -63,6 +68,9 @@ if __name__ == "__main__":
         },
         "sky_colour": {
             "ui:widget": "colour"
+        },
+        "enum": {
+            "ui:widget": "enum",
         }
 
     }
