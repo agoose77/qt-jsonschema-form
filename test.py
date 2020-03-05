@@ -92,4 +92,3 @@ if __name__ == "__main__":
     form.widget.on_changed.connect(lambda d: print(dumps(d, indent=4)))
 
     app.exec_()
-

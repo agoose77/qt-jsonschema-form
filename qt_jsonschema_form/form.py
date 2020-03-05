@@ -1,9 +1,11 @@
 from copy import deepcopy
 
 from jsonschema.validators import validator_for
-\
+
 from . import widgets
 from .defaults import compute_defaults
+
+\
 
 
 def get_widget_state(schema, state=None):
@@ -73,7 +75,8 @@ class WidgetBuilder:
         schema_type = get_schema_type(schema)
 
         try:
-            default_variant = self.widget_variant_modifiers[schema_type](schema)
+            default_variant = self.widget_variant_modifiers[schema_type](
+                schema)
         except KeyError:
             default_variant = self.default_widget_variants[schema_type]
 

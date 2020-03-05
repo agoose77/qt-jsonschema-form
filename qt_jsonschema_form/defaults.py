@@ -18,10 +18,12 @@ def array_defaults(schema):
     # in this case, it's a tuple.
     return [compute_defaults(s) for s in schema["items"]]
 
+
 defaults = {
     "array": array_defaults,
     "object": object_defaults,
 }
+
 
 def compute_defaults(schema):
     if "default" in schema:
