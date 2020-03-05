@@ -18,6 +18,10 @@ if __name__ == "__main__":
                 "title": "Schema path",
                 "type": "string"
             },
+            "text": {
+                "type": "string",
+                "maxLength": 20
+            },
             "integerRangeSteps": {
                 "title": "Integer range (by 10)",
                 "type": "integer",
