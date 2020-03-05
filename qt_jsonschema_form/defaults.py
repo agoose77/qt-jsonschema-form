@@ -53,12 +53,19 @@ def boolean_defaults(schema):
     return True
 
 
+def string_defaults(schema):
+    # todo: deal with pattern
+    minLength = schema.get("minLength", 0)
+    return " " * minLength
+
+
 defaults = {
     "array": array_defaults,
     "object": object_defaults,
     "numeric": numeric_defaults,
     "integer": numeric_defaults,
     "boolean": boolean_defaults,
+    "string": string_defaults,
 }
 
 
