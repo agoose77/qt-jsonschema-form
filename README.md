@@ -11,6 +11,9 @@ Currently this tool does not support `anyOf` or `oneOf` directives. The reason f
 
 Additionally, the `$ref` keyword is not supported. This will be fixed, but is waiting on some proposed upstream changes in `jsonschema`
 
+## Detailed explanation
+For more details about each options, see [](USAGE.md)
+
 ## Example
 ```python3
 import sys
