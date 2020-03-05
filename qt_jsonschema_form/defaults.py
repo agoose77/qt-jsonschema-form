@@ -1,3 +1,5 @@
+from .numeric_defaults import numeric_defaults
+
 def enum_defaults(schema):
     try:
         return schema["enum"][0]
@@ -22,6 +24,8 @@ def array_defaults(schema):
 defaults = {
     "array": array_defaults,
     "object": object_defaults,
+    "numeric": numeric_defaults,
+    "integer": numeric_defaults,
 }
 
 
