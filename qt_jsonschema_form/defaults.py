@@ -13,7 +13,12 @@ def object_defaults(schema):
 
 
 def list_defaults(schema):
-    return []
+    # todo: respect unicity constraint.
+    minItems = schema.get("minItems", 0)
+    if minItems <= 0:
+        return []
+    default = compute_defaults(schema["items"])
+    return [default] * minItems
 
 
 def tuple_defaults(schema):
