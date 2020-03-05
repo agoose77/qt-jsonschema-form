@@ -5,10 +5,12 @@ from jsonschema.validators import validator_for
 from . import widgets
 from .defaults import compute_defaults
 
-\
-
 
 def get_widget_state(schema, state=None):
+    """A JSON object. Either the state given in input if any, otherwise
+    the default value satisfying the current type.
+
+    """
     if state is None:
         return compute_defaults(schema)
     return state
@@ -44,6 +46,8 @@ class WidgetBuilder:
     }
 
     def __init__(self, validator_cls=None):
+        """validator_cls -- A validator, as in jsonschema library. Schemas are
+        supposed to be valid for it."""
         self.widget_map = deepcopy(self.default_widget_map)
         self.validator_cls = validator_cls
 
@@ -58,6 +62,8 @@ class WidgetBuilder:
         form = widgets.FormWidget(schema_widget)
 
         def validate(data):
+            """Show the error widget iff there are errors, and the error messages
+            in it."""
             form.clear_errors()
             errors = [*validator.iter_errors(data)]
 
