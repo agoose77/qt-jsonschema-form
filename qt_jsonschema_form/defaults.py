@@ -14,6 +14,23 @@ def object_defaults(schema):
 
 def list_defaults(schema):
     # todo: respect unicity constraint.
+    # todo: deal with intersection of schema, in case there is contains and items
+    # e.g. add elements at end of tuple
+    if "contains" in schema:
+        return list_defaults_contains(schema)
+    else:
+        return list_defaults_no_contains(schema)
+
+
+def list_defaults_contains(schema):
+    minContains = schema.get("minContains", 1)
+    if minContains <= 0:
+        return []
+    default = compute_defaults(schema["contains"])
+    return [default] * minContains
+
+
+def list_defaults_no_contains(schema):
     minItems = schema.get("minItems", 0)
     if minItems <= 0:
         return []
