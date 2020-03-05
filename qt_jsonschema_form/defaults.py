@@ -41,6 +41,10 @@ def compute_defaults(schema):
     if "const" in schema:
         return schema["const"]
 
+    if "type" not in schema:
+        # any value is valid.
+        return {}
+
     schema_type = schema["type"]
 
     if schema_type in defaults:
