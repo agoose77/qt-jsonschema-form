@@ -37,6 +37,10 @@ def compute_defaults(schema):
     if "enum" in schema:
         return enum_defaults(schema)
 
+    # Const
+    if "const" in schema:
+        return schema["const"]
+
     schema_type = schema["type"]
 
     if schema_type in defaults:
