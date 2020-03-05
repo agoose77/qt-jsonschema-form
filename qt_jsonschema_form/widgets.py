@@ -54,13 +54,21 @@ class SchemaWidgetMixin:
 
 
 class TextSchemaWidget(SchemaWidgetMixin, QtWidgets.QLineEdit):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.maxLength = self.schema.get("maxLength")
 
     def configure(self):
         self.textChanged.connect(self.on_changed.emit)
 
     @state_property
     def state(self) -> str:
-        return str(self.text())
+        state = str(self.text())
+        if self.maxLength is not None and len(state) > self.maxLength:
+            state = state[:self.maxLength]
+            self.setText(state)
+            # Stripping the text to limit to the admitted length
+        return state
 
     @state.setter
     def state(self, state: str):
@@ -76,10 +84,18 @@ class PasswordWidget(TextSchemaWidget):
 
 
 class TextAreaSchemaWidget(SchemaWidgetMixin, QtWidgets.QTextEdit):
+    def __init__(self, *args, **kwargs):
+        super(*args, **kwargs)
+        self.maxLength = self.schema.get("maxLength")
 
     @state_property
     def state(self) -> str:
-        return str(self.toPlainText())
+        state = str(self.toPlainText())
+        if self.maxLength is not None and len(state) > self.maxLength:
+            state = state[:self.maxLength]
+            self.setPlainText(state)
+            # Stripping the text to limit to the admitted length
+        return state
 
     @state.setter
     def state(self, state: str):
