@@ -572,8 +572,8 @@ class EnumSchemaWidget(SchemaWidgetMixin, QtWidgets.QComboBox):
 
 class FormWidget(QtWidgets.QWidget):
 
-    def __init__(self, widget: SchemaWidgetMixin):
-        super().__init__()
+    def __init__(self, widget: SchemaWidgetMixin, parent=None):
+        super().__init__(parent=parent)
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
 

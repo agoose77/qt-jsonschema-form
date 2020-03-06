@@ -51,7 +51,7 @@ class WidgetBuilder:
         self.widget_map = deepcopy(self.default_widget_map)
         self.validator_cls = validator_cls
 
-    def create_form(self, schema: dict, ui_schema: dict, state=None) -> widgets.SchemaWidgetMixin:
+    def create_form(self, schema: dict, ui_schema: dict, state=None, parent=None) -> widgets.SchemaWidgetMixin:
         validator_cls = self.validator_cls
         if validator_cls is None:
             validator_cls = validator_for(schema)
@@ -59,7 +59,7 @@ class WidgetBuilder:
         validator_cls.check_schema(schema)
         validator = validator_cls(schema)
         schema_widget = self.create_widget(schema, ui_schema, state)
-        form = widgets.FormWidget(schema_widget)
+        form = widgets.FormWidget(schema_widget, parent)
 
         def validate(data):
             """Show the error widget iff there are errors, and the error messages
