@@ -51,7 +51,7 @@ class WidgetBuilder:
         self.widget_map = deepcopy(self.default_widget_map)
         self.validator_cls = validator_cls
 
-    def create_form(self, schema: dict, ui_schema: dict, state=None, parent=None) -> widgets.SchemaWidgetMixin:
+    def create_form(self, schema: dict, ui_schema: dict = {}, state=None, parent=None) -> widgets.SchemaWidgetMixin:
         validator_cls = self.validator_cls
         if validator_cls is None:
             validator_cls = validator_for(schema)
