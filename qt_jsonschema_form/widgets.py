@@ -544,6 +544,9 @@ class ObjectSchemaWidget(SchemaWidgetMixin, QtWidgets.QGroupBox):
                 sub_schema, sub_ui_schema)  # TODO onchanged
             widget.on_changed.connect(partial(self.widget_on_changed, name))
             label = sub_schema.get("title", name)
+            label = QtWidgets.QLabel(label)
+            if "description" in sub_schema:
+                label.setToolTip(sub_schema["description"])
             layout.addRow(label, widget)
             widgets[name] = widget
 
