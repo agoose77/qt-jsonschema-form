@@ -570,12 +570,12 @@ class EnumSchemaWidget(SchemaWidgetMixin, QtWidgets.QComboBox):
         self.on_changed.emit(self.state)
 
 
-class FormWidget(QtWidgets.QWidget):
+class FormWidget(QtWidgets.QDialog):
 
     def __init__(self, widget: SchemaWidgetMixin, parent=None):
         super().__init__(parent=parent)
-        layout = QtWidgets.QVBoxLayout()
-        self.setLayout(layout)
+        self.layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.layout)
 
         self.error_widget = QtWidgets.QGroupBox()
         self.error_widget.setTitle("Errors")
@@ -583,8 +583,8 @@ class FormWidget(QtWidgets.QWidget):
         self.error_widget.setLayout(self.error_layout)
         self.error_widget.hide()
 
-        layout.addWidget(self.error_widget)
-        layout.addWidget(widget)
+        self.layout.addWidget(self.error_widget)
+        self.layout.addWidget(widget)
 
         self.widget = widget
 
