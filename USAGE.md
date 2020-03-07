@@ -59,6 +59,7 @@ Strings has the following variant:
 * "text", which uses a `QLineEdit`
 * "password", which uses a `TextSchemaWidget`
 * "filepath", which adds a button which use the open file name in the computer
+* "dirpath", which adds a button which use the open directory name in the computer
 * "colour", which uses a `QColorButton`
 
 # Defaults

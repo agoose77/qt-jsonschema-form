@@ -26,7 +26,7 @@ class WidgetBuilder:
         "object": {"object": widgets.ObjectSchemaWidget, "enum": widgets.EnumSchemaWidget},
         "number": {"spin": widgets.SpinDoubleSchemaWidget, "text": widgets.TextSchemaWidget, "enum": widgets.EnumSchemaWidget},
         "string": {"textarea": widgets.TextAreaSchemaWidget, "text": widgets.TextSchemaWidget, "password": widgets.PasswordWidget,
-                   "filepath": widgets.FilepathSchemaWidget, "colour": widgets.ColorSchemaWidget, "enum": widgets.EnumSchemaWidget},
+                   "filepath": widgets.FilepathSchemaWidget, "dirpath": widgets.DirectorypathSchemaWidget, "colour": widgets.ColorSchemaWidget, "enum": widgets.EnumSchemaWidget},
         "integer": {"spin": widgets.SpinSchemaWidget, "text": widgets.TextSchemaWidget, "range": widgets.IntegerRangeSchemaWidget,
                     "enum": widgets.EnumSchemaWidget},
         "array": {"array": widgets.ArraySchemaWidget, "enum": widgets.EnumSchemaWidget}

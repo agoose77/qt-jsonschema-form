@@ -305,6 +305,12 @@ class FilepathSchemaWidget(SchemaWidgetMixin, QtWidgets.QWidget):
         self.path_widget.setText(state)
 
 
+class DirectorypathSchemaWidget(FilepathSchemaWidget):
+    def _on_clicked(self, flag):
+        path = QtWidgets.QFileDialog.getExistingDirectory()
+        self.path_widget.setText(path)
+
+
 class ArrayControlsWidget(QtWidgets.QWidget):
     on_delete = QtCore.pyqtSignal()
     on_move_up = QtCore.pyqtSignal()
