@@ -113,6 +113,8 @@ class CheckboxSchemaWidget(SchemaWidgetMixin, QtWidgets.QCheckBox):
 
     @state.setter
     def state(self, checked: bool):
+        if not isinstance(checked, bool):
+            print(f"«{checked}» should be a bool and is a {type(checked)}")
         self.setChecked(checked)
 
     def configure(self):
@@ -563,6 +565,7 @@ class EnumSchemaWidget(SchemaWidgetMixin, QtWidgets.QComboBox):
     def state(self, value):
         index = self.findData(value)
         if index == -1:
+            print(f"Value {value} not found in the combo box.")
             raise ValueError(value)
         self.setCurrentIndex(index)
 
