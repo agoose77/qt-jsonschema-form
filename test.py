@@ -18,6 +18,10 @@ if __name__ == "__main__":
                 "title": "Schema path",
                 "type": "string"
             },
+            "text": {
+                "type": "string",
+                "maxLength": 20
+            },
             "integerRangeSteps": {
                 "title": "Integer range (by 10)",
                 "type": "integer",
@@ -27,6 +31,15 @@ if __name__ == "__main__":
             },
             "sky_colour": {
                 "type": "string"
+            },
+            "boolean": {
+                "type": "boolean",
+
+            },
+            "enum": {
+                "type": "boolean",
+                "enum": [True, False]
+
             },
             "names": {
                 "type": "array",
@@ -59,6 +72,9 @@ if __name__ == "__main__":
         },
         "sky_colour": {
             "ui:widget": "colour"
+        },
+        "enum": {
+            "ui:widget": "enum",
         }
 
     }
@@ -76,4 +92,3 @@ if __name__ == "__main__":
     form.widget.on_changed.connect(lambda d: print(dumps(d, indent=4)))
 
     app.exec_()
-
