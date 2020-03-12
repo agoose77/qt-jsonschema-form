@@ -85,7 +85,7 @@ class PasswordWidget(TextSchemaWidget):
 
 class TextAreaSchemaWidget(SchemaWidgetMixin, QtWidgets.QTextEdit):
     def __init__(self, *args, **kwargs):
-        super(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.maxLength = self.schema.get("maxLength")
 
     @state_property
@@ -187,8 +187,8 @@ class SpinSchemaWidget(SchemaWidgetMixin, QtWidgets.QSpinBox):
 
 class IntegerRangeSchemaWidget(SchemaWidgetMixin, QtWidgets.QSlider):
 
-    def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'):
-        super().__init__(schema, ui_schema, widget_builder, orientation=QtCore.Qt.Horizontal)
+    def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder', *args, **kwargs):
+        super().__init__(schema, ui_schema, widget_builder, orientation=QtCore.Qt.Horizontal, *args, **kwargs)
 
     @state_property
     def state(self) -> int:
@@ -280,8 +280,8 @@ class ColorSchemaWidget(SchemaWidgetMixin, QColorButton):
 
 class FilepathSchemaWidget(SchemaWidgetMixin, QtWidgets.QWidget):
 
-    def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'):
-        super().__init__(schema, ui_schema, widget_builder)
+    def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder', *args, **kwargs):
+        super().__init__(schema, ui_schema, widget_builder, *args, **kwargs)
 
         layout = QtWidgets.QHBoxLayout()
         self.setLayout(layout)
@@ -318,8 +318,8 @@ class ArrayControlsWidget(QtWidgets.QWidget):
     on_move_up = QtCore.pyqtSignal()
     on_move_down = QtCore.pyqtSignal()
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         style = self.style()
 
@@ -348,8 +348,8 @@ class ArrayControlsWidget(QtWidgets.QWidget):
 
 class ArrayRowWidget(QtWidgets.QWidget):
 
-    def __init__(self, widget: QtWidgets.QWidget, controls: ArrayControlsWidget):
-        super().__init__()
+    def __init__(self, widget: QtWidgets.QWidget, controls: ArrayControlsWidget, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(widget)
@@ -501,8 +501,8 @@ class ArraySchemaWidget(SchemaWidgetMixin, QtWidgets.QWidget):
 
 class ObjectSchemaWidget(SchemaWidgetMixin, QtWidgets.QGroupBox):
 
-    def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder'):
-        super().__init__(schema, ui_schema, widget_builder)
+    def __init__(self, schema: dict, ui_schema: dict, widget_builder: 'WidgetBuilder', *args, **kwargs):
+        super().__init__(schema, ui_schema, widget_builder, *args, **kwargs)
 
         self.widgets = self.populate_from_schema(
             schema, ui_schema, widget_builder)
@@ -584,8 +584,8 @@ class EnumSchemaWidget(SchemaWidgetMixin, QtWidgets.QComboBox):
 
 class FormWidget(QtWidgets.QDialog):
 
-    def __init__(self, widget: SchemaWidgetMixin, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, widget: SchemaWidgetMixin, parent=None, *args, **kwargs):
+        super().__init__(*args, parent=parent, **kwargs)
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
 
