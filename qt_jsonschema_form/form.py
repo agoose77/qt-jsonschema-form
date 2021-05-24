@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 from jsonschema.validators import validator_for
-\
 from . import widgets
 from .defaults import compute_defaults
 
