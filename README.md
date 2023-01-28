@@ -16,7 +16,7 @@ Additionally, the `$ref` keyword is not supported. This will be fixed, but is wa
 import sys
 from json import dumps
 
-from PyQt5 import QtWidgets
+from qtpy import QtWidgets
 
 from qt_jsonschema_form import WidgetBuilder
 
@@ -98,3 +98,7 @@ if __name__ == "__main__":
 
 
 ```
+
+## Notes
+
+This package uses [QtPy](https://github.com/spyder-ide/qtpy) as an abstraction layer for PyQt5/PySide2/PyQt6/PySide6. One of those libraries must also be installed in order to function.
