@@ -11,6 +11,7 @@ if __name__ == "__main__":
     builder = WidgetBuilder()
 
     schema = {
+        "$schema": "https://json-schema.org/draft/2019-09/schema",
         "type": "object",
         "title": "Number fields and widgets",
         "properties": {
@@ -33,14 +34,14 @@ if __name__ == "__main__":
                 "items": [
                     {
                         "type": "string",
-                        "pattern": "[a-zA-Z\-'\s]+",
+                        "pattern": "[a-zA-Z]+",
                         "enum": [
                             "Jack", "Jill"
                         ]
                     },
                     {
                         "type": "string",
-                        "pattern": "[a-zA-Z\-'\s]+",
+                        "pattern": "[a-zA-Z]+",
                         "enum": [
                             "Alice", "Bob"
                         ]
